@@ -40,24 +40,32 @@ export class ProductsService {
     id: number,
     updateProductDto: UpdateProductDto,
   ): Promise<Product> {
-    try {
-      return await this.prisma.product.update({
+    return this.runOrNotFound(id, () =>
+      this.prisma.product.update({
         where: { id },
         data: updateProductDto,
-      });
-    } catch (error) {
-      if (isPrismaNotFoundError(error)) {
-        throw new NotFoundException(`Product with ID ${id} not found`);
-      }
-      throw error;
-    }
+      }),
+    );
   }
 
   async remove(id: number): Promise<Product> {
-    try {
-      return await this.prisma.product.delete({
+    return this.runOrNotFound(id, () =>
+      this.prisma.product.delete({
         where: { id },
-      });
+      }),
+    );
+  }
+
+  /**
+   * Runs a Prisma write that fails with P2025 when the row is missing.
+   * Maps that expected case to NotFoundException; rethrows everything else.
+   */
+  private async runOrNotFound(
+    id: number,
+    operation: () => Promise<Product>,
+  ): Promise<Product> {
+    try {
+      return await operation();
     } catch (error) {
       if (isPrismaNotFoundError(error)) {
         throw new NotFoundException(`Product with ID ${id} not found`);
