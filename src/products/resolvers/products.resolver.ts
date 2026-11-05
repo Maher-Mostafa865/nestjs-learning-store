@@ -1,14 +1,12 @@
-import { Resolver, Query, Args, Mutation, Int } from '@nestjs/graphql';
-import { ProductsService } from './products.service.js';
-import { ProductType } from './graphql/product.type.js';
-import { ProductInput } from './graphql/product.input.js';
-import { UpdateProductInput } from './graphql/update-product.input.js';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { ProductInput } from '../graphql/inputs/product.input.js';
+import { UpdateProductInput } from '../graphql/inputs/update-product.input.js';
+import { ProductType } from '../graphql/types/product.type.js';
+import { ProductsService } from '../services/products.service.js';
 
 @Resolver()
 export class ProductsResolver {
-  constructor(
-    private readonly productsService: ProductsService,
-  ) {}
+  constructor(private readonly productsService: ProductsService) {}
 
   @Query(() => [ProductType], { name: 'products' })
   findAll() {
@@ -16,16 +14,12 @@ export class ProductsResolver {
   }
 
   @Query(() => ProductType, { name: 'product' })
-  findOne(
-    @Args('id', { type: () => Int }) id: number,
-  ) {
+  findOne(@Args('id', { type: () => Int }) id: number) {
     return this.productsService.findOne(id);
   }
 
   @Mutation(() => ProductType)
-  createProduct(
-    @Args('input') input: ProductInput,
-  ) {
+  createProduct(@Args('input') input: ProductInput) {
     return this.productsService.create(input);
   }
 
@@ -45,5 +39,3 @@ export class ProductsResolver {
     return true;
   }
 }
-
-
