@@ -7,8 +7,10 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CreateProductDto } from '../dto/create-product.dto.js';
+import { PaginationQueryDto } from '../dto/pagination-query.dto.js';
 import { UpdateProductDto } from '../dto/update-product.dto.js';
 import { ProductsService } from '../services/products.service.js';
 
@@ -17,8 +19,8 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(@Query() query: PaginationQueryDto) {
+    return this.productsService.findPaginated(query);
   }
 
   @Get(':id')

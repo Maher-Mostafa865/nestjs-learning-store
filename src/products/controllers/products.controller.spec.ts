@@ -8,6 +8,7 @@ describe('ProductsController', () => {
 
   const productsService = {
     findAll: vi.fn(),
+    findPaginated: vi.fn(),
     findOne: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
@@ -29,9 +30,15 @@ describe('ProductsController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('delegates findAll to the service', async () => {
-    productsService.findAll.mockResolvedValue([]);
-    await expect(controller.findAll()).resolves.toEqual([]);
-    expect(productsService.findAll).toHaveBeenCalled();
+  it('delegates findAll to findPaginated with the query dto', async () => {
+    const query = { page: 2, limit: 5 };
+    const response = {
+      data: [],
+      meta: { total: 0, page: 2, limit: 5, totalPages: 0 },
+    };
+    productsService.findPaginated.mockResolvedValue(response);
+
+    await expect(controller.findAll(query)).resolves.toEqual(response);
+    expect(productsService.findPaginated).toHaveBeenCalledWith(query);
   });
 });

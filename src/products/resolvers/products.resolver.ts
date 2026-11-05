@@ -1,6 +1,8 @@
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { PaginationQueryDto } from '../dto/pagination-query.dto.js';
 import { ProductInput } from '../graphql/inputs/product.input.js';
 import { UpdateProductInput } from '../graphql/inputs/update-product.input.js';
+import { PaginatedProductsType } from '../graphql/types/paginated-products.type.js';
 import { ProductType } from '../graphql/types/product.type.js';
 import { ProductsService } from '../services/products.service.js';
 
@@ -8,9 +10,15 @@ import { ProductsService } from '../services/products.service.js';
 export class ProductsResolver {
   constructor(private readonly productsService: ProductsService) {}
 
-  @Query(() => [ProductType], { name: 'products' })
-  findAll() {
-    return this.productsService.findAll();
+  @Query(() => PaginatedProductsType, { name: 'products' })
+  findAll(
+    @Args('query', {
+      type: () => PaginationQueryDto,
+      nullable: true,
+    })
+    query?: PaginationQueryDto,
+  ) {
+    return this.productsService.findPaginated(query ?? {});
   }
 
   @Query(() => ProductType, { name: 'product' })

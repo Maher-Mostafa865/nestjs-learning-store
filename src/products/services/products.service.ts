@@ -3,18 +3,44 @@ import { isPrismaNotFoundError } from '../../common/prisma/is-prisma-not-found-e
 import type { Product } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CreateProductDto } from '../dto/create-product.dto.js';
+import type { PaginatedResult } from '../dto/paginated-result.js';
+import { PaginationQueryDto } from '../dto/pagination-query.dto.js';
 import { UpdateProductDto } from '../dto/update-product.dto.js';
 
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<Product[]> {
-    return this.prisma.product.findMany({
-      orderBy: { id: 'asc' },
-    });
+  /** Paginated list for REST GET /products and GraphQL `products`. */
+  async findPaginated(
+    query: PaginationQueryDto,
+  ): Promise<PaginatedResult<Product>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.product.findMany({
+        skip,
+        take: limit,
+        orderBy: { id: 'asc' },
+      }),
+      this.prisma.product.count(),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: total === 0 ? 0 : Math.ceil(total / limit),
+      },
+    };
   }
 
+
+  
   async findOne(id: number): Promise<Product> {
     const product = await this.prisma.product.findUnique({
       where: { id },

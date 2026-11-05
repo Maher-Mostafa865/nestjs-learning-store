@@ -34,8 +34,24 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/products",
-            "description": "List all products via REST."
+            "url": {
+              "raw": "{{baseUrl}}/products?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default 1, min 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Page size (default 10, min 1, max 100)"
+                }
+              ]
+            },
+            "description": "Paginated product list. Response: { data, meta: { total, page, limit, totalPages } }."
           },
           "response": []
         },
@@ -110,12 +126,12 @@
             "body": {
               "mode": "graphql",
               "graphql": {
-                "query": "query Products {\n  products {\n    id\n    name\n    price\n  }\n}",
-                "variables": ""
+                "query": "query Products($query: PaginationQueryDto) {\n  products(query: $query) {\n    data {\n      id\n      name\n      price\n    }\n    meta {\n      total\n      page\n      limit\n      totalPages\n    }\n  }\n}",
+                "variables": "{\n  \"query\": {\n    \"page\": 1,\n    \"limit\": 10\n  }\n}"
               }
             },
             "url": "{{baseUrl}}/graphql",
-            "description": "GraphQL query: all products."
+            "description": "GraphQL paginated products. Omit `query` (or leave fields out) to use defaults page=1, limit=10."
           },
           "response": []
         },
