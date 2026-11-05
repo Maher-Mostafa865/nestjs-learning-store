@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "NestJS Learning Store",
-    "description": "REST and GraphQL endpoints for nestjs-learning-store.\n\nStart the app: `npm run start:dev` (default port 3000).\nCollection variable `baseUrl` defaults to http://localhost:3000.",
+    "description": "REST and GraphQL endpoints for nestjs-learning-store (Prisma-backed products).\n\nStart the app: `npm run start:dev` (default port 3000).\nCollection variable `baseUrl` defaults to http://localhost:3000.\nUse `productId` for find-one / delete requests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -36,6 +36,16 @@
             "header": [],
             "url": "{{baseUrl}}/products",
             "description": "List all products via REST."
+          },
+          "response": []
+        },
+        {
+          "name": "Get product by id (GET /products/:id)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/products/{{productId}}",
+            "description": "Get one product by id. Set collection variable `productId`. Returns 404 if not found."
           },
           "response": []
         },
@@ -91,6 +101,23 @@
           "response": []
         },
         {
+          "name": "Query — product by id",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Product($id: Int!) {\n  product(id: $id) {\n    id\n    name\n    price\n  }\n}",
+                "variables": "{\n  \"id\": 1\n}"
+              }
+            },
+            "url": "{{baseUrl}}/graphql",
+            "description": "GraphQL query: one product by id. Change `id` in Variables (or match collection `productId`)."
+          },
+          "response": []
+        },
+        {
           "name": "Mutation — createProduct",
           "request": {
             "method": "POST",
@@ -103,7 +130,24 @@
               }
             },
             "url": "{{baseUrl}}/graphql",
-            "description": "GraphQL mutation: create product."
+            "description": "GraphQL mutation: create product. Input: ProductInput { name, price }."
+          },
+          "response": []
+        },
+        {
+          "name": "Mutation — removeProduct",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation RemoveProduct($id: Int!) {\n  removeProduct(id: $id)\n}",
+                "variables": "{\n  \"id\": 1\n}"
+              }
+            },
+            "url": "{{baseUrl}}/graphql",
+            "description": "GraphQL mutation: delete product by id. Returns Boolean."
           },
           "response": []
         },

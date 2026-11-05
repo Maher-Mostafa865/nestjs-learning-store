@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 @Injectable()
 export class ProductsService {
 
-  constructor( private readonly prisma: PrismaService, ) {}
+  constructor( private readonly prisma: PrismaService,) {}
 
 
    private products = [
@@ -26,35 +26,38 @@ export class ProductsService {
     },
    ]
 
-   findAll(){
-    return this.products; 
+   async findAll(){
+    return this.prisma.product.findMany(); 
    }
 
-   create ( createProductDto: CreateProductDto){
-    const product = {
-      id: this.products.length + 1,
-      ...createProductDto,
-    }
-
-    this.products.push(product);
-    return product;
-   }
-
-   remove(id: number) {
-    const productIndex = this.products.findIndex(
-      (product) => product.id === id,
-    );
-  
-    if (productIndex === -1) {
-      throw new NotFoundException(
-        `Product with ID ${id} not found`,
-      );
-    }
-  
-    this.products.splice(productIndex, 1);
-  
-    return {
-      message: 'Product deleted successfully',
-    };
+   async create ( createProductDto: CreateProductDto){
+     return this.prisma.product.create({
+      data: {
+        name: createProductDto.name,
+        price: createProductDto.price,
+      },
+     })
   }
+   
+  async findOne (id:number){
+    const product = await this.prisma.product.findUnique({
+      where : { id:id},
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+    return product;
+  }
+
+  async remove (id:number){
+    const product = await this.prisma.product.delete({
+      where : { id:id},
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+  }
+  
 }

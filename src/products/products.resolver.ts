@@ -29,6 +29,13 @@ export class ProductsResolver {
     this.productsService.remove(id);
     return true;
   }
+
+  @Query(() => ProductType, { name: 'product' })
+  findOne(
+    @Args('id',{type: () => Int }) id : number,
+  ) {
+    return this.productsService.findOne(id);
+  }
 }
 
 
