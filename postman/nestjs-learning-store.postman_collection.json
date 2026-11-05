@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "NestJS Learning Store",
-    "description": "REST and GraphQL endpoints for nestjs-learning-store (Prisma-backed products).\n\nStart the app: `npm run start:dev` (default port 3000).\nCollection variable `baseUrl` defaults to http://localhost:3000.\nUse `productId` for find-one / delete requests.",
+    "description": "REST and GraphQL endpoints for nestjs-learning-store (Prisma-backed products).\n\nStart the app: `npm run start:dev` (default port 3000).\nCollection variable `baseUrl` defaults to http://localhost:3000.\nUse `productId` for find-one / update / delete requests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -69,6 +69,25 @@
           "response": []
         },
         {
+          "name": "Update product (PATCH /products/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Widget\",\n  \"price\": 12.5\n}"
+            },
+            "url": "{{baseUrl}}/products/{{productId}}",
+            "description": "Update a product by id. Body: name (string), price (number >= 0). Set collection variable `productId`."
+          },
+          "response": []
+        },
+        {
           "name": "Delete product (DELETE /products/:id)",
           "request": {
             "method": "DELETE",
@@ -131,6 +150,23 @@
             },
             "url": "{{baseUrl}}/graphql",
             "description": "GraphQL mutation: create product. Input: ProductInput { name, price }."
+          },
+          "response": []
+        },
+        {
+          "name": "Mutation — updateProduct",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateProduct($id: Int!, $input: UpdateProductInput!) {\n  updateProduct(id: $id, input: $input) {\n    id\n    name\n    price\n  }\n}",
+                "variables": "{\n  \"id\": 1,\n  \"input\": {\n    \"name\": \"Updated Gadget\",\n    \"price\": 29.99\n  }\n}"
+              }
+            },
+            "url": "{{baseUrl}}/graphql",
+            "description": "GraphQL mutation: update product by id. Input fields are optional: UpdateProductInput { name?, price? }."
           },
           "response": []
         },
