@@ -13,6 +13,37 @@ datasource db {
 }
 
 
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// Opaque refresh tokens, stored as SHA-256 ids. A family is revoked when any row is.
+model RefreshToken {
+  id              String    @id
+  familyId        String
+  userId          String
+  createdAt       DateTime
+  expiresAt       DateTime
+  familyExpiresAt DateTime
+  usedAt          DateTime?
+  revoked         Boolean   @default(false)
+  claims          Json?
+
+  @@index([familyId])
+  @@index([userId])
+  @@index([familyExpiresAt])
+}
+
 model Product {
   id        Int      @id @default(autoincrement())
   name      String

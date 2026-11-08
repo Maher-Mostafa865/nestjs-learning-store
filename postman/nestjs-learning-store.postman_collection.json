@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "NestJS Learning Store",
-    "description": "REST and GraphQL endpoints for nestjs-learning-store (Prisma-backed products).\n\nStart the app: `npm run start:dev` (default port 3000).\nCollection variable `baseUrl` defaults to http://localhost:3000.\nUse `productId` for find-one / update / delete requests.",
+    "description": "REST and GraphQL endpoints for nestjs-learning-store.\n\nStart the app: `npm run start:dev` (default port 3000).\nSign up or sign in first. The tests save `accessToken` and `refreshToken`.\nCatalog reads are public. Creating, updating, and deleting products requires an admin access token.\nSet `ADMIN_EMAILS` to the sign-up address to receive the ADMIN role.\nUse `productId` for find-one / update / delete requests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -13,9 +13,135 @@
     {
       "key": "productId",
       "value": "1"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "email",
+      "value": "admin@example.com"
+    },
+    {
+      "key": "password",
+      "value": "correct horse battery"
     }
   ],
   "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign up (POST /auth/sign-up)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "if (body.refreshToken) pm.collectionVariables.set('refreshToken', body.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/sign-up",
+            "description": "Creates a user and returns the user plus access and refresh tokens. Password must be 12-128 characters. Addresses in ADMIN_EMAILS get the ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Sign in (POST /auth/sign-in)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "if (body.refreshToken) pm.collectionVariables.set('refreshToken', body.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/sign-in",
+            "description": "Exchanges an email and password for a short-lived access token and a single-use refresh token. Unknown emails and wrong passwords get the same 401."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh (POST /auth/token/refresh)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "if (body.refreshToken) pm.collectionVariables.set('refreshToken', body.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/token/refresh",
+            "description": "Spends the refresh token and returns the next pair. Sending a spent token revokes the whole family."
+          },
+          "response": []
+        },
+        {
+          "name": "Current user (GET /auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "The signed-in user. Roles are loaded from the database, not from the token."
+          },
+          "response": []
+        },
+        {
+          "name": "Sign out (POST /auth/sign-out)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/sign-out",
+            "description": "Revokes the refresh-token family. The access token stays valid until it expires. Responds 204."
+          },
+          "response": []
+        }
+      ]
+    },
     {
       "name": "REST",
       "item": [
@@ -73,6 +199,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
               }
             ],
             "body": {
@@ -80,7 +210,7 @@
               "raw": "{\n  \"name\": \"Widget\",\n  \"price\": 9.99\n}"
             },
             "url": "{{baseUrl}}/products",
-            "description": "Create a product. Body: name (string), price (number >= 0)."
+            "description": "Create a product. Requires an admin access token. Body: name (string), price (number >= 0)."
           },
           "response": []
         },
@@ -92,6 +222,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
               }
             ],
             "body": {
@@ -99,7 +233,7 @@
               "raw": "{\n  \"name\": \"Updated Widget\",\n  \"price\": 12.5\n}"
             },
             "url": "{{baseUrl}}/products/{{productId}}",
-            "description": "Update a product by id. Body: name (string), price (number >= 0). Set collection variable `productId`."
+            "description": "Update a product by id. Requires an admin access token. Body: name (string), price (number >= 0). Set collection variable `productId`."
           },
           "response": []
         },
@@ -107,9 +241,14 @@
           "name": "Delete product (DELETE /products/:id)",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": "{{baseUrl}}/products/{{productId}}",
-            "description": "Delete product by id. Set collection variable `productId` or edit the path."
+            "description": "Delete a product by id. Requires an admin access token."
           },
           "response": []
         }
@@ -118,6 +257,90 @@
     {
       "name": "GraphQL",
       "item": [
+        {
+          "name": "Mutation — signUp",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const signedIn = body.data && body.data.signUp;",
+                  "if (signedIn && signedIn.accessToken) pm.collectionVariables.set('accessToken', signedIn.accessToken);",
+                  "if (signedIn && signedIn.refreshToken) pm.collectionVariables.set('refreshToken', signedIn.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation SignUp($input: SignUpDto!) {\n  signUp(input: $input) {\n    accessToken\n    refreshToken\n    expiresIn\n    user { id email role }\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"email\": \"admin@example.com\",\n    \"password\": \"correct horse battery\"\n  }\n}"
+              }
+            },
+            "url": "{{baseUrl}}/graphql",
+            "description": "Creates an account and returns tokens. Addresses in ADMIN_EMAILS receive the ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Mutation — signIn",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const signedIn = body.data && body.data.signIn;",
+                  "if (signedIn && signedIn.accessToken) pm.collectionVariables.set('accessToken', signedIn.accessToken);",
+                  "if (signedIn && signedIn.refreshToken) pm.collectionVariables.set('refreshToken', signedIn.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation SignIn($input: SignInDto!) {\n  signIn(input: $input) {\n    accessToken\n    refreshToken\n    expiresIn\n    user { id email role }\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"email\": \"admin@example.com\",\n    \"password\": \"correct horse battery\"\n  }\n}"
+              }
+            },
+            "url": "{{baseUrl}}/graphql",
+            "description": "Password sign-in. Unknown emails and wrong passwords both return an authentication error."
+          },
+          "response": []
+        },
+        {
+          "name": "Query — me",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Me {\n  me {\n    id\n    email\n    role\n  }\n}",
+                "variables": ""
+              }
+            },
+            "url": "{{baseUrl}}/graphql",
+            "description": "The signed-in user. Send the access token in the Authorization header."
+          },
+          "response": []
+        },
         {
           "name": "Query — products",
           "request": {
@@ -156,7 +379,12 @@
           "name": "Mutation — createProduct",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "body": {
               "mode": "graphql",
               "graphql": {
@@ -165,7 +393,7 @@
               }
             },
             "url": "{{baseUrl}}/graphql",
-            "description": "GraphQL mutation: create product. Input: ProductInput { name, price }."
+            "description": "Creates a product. Requires an admin access token."
           },
           "response": []
         },
@@ -173,7 +401,12 @@
           "name": "Mutation — updateProduct",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "body": {
               "mode": "graphql",
               "graphql": {
@@ -182,7 +415,7 @@
               }
             },
             "url": "{{baseUrl}}/graphql",
-            "description": "GraphQL mutation: update product by id. Input fields are optional: UpdateProductInput { name?, price? }."
+            "description": "Updates a product. Requires an admin access token. Input fields are optional."
           },
           "response": []
         },
@@ -190,7 +423,12 @@
           "name": "Mutation — removeProduct",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "body": {
               "mode": "graphql",
               "graphql": {
@@ -199,7 +437,7 @@
               }
             },
             "url": "{{baseUrl}}/graphql",
-            "description": "GraphQL mutation: delete product by id. Returns Boolean."
+            "description": "Deletes a product. Requires an admin access token. Returns Boolean."
           },
           "response": []
         },
