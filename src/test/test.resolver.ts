@@ -1,9 +1,11 @@
 import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Public } from '@nestjs/authentication';
 import { TestService } from './test.service.js';
 import { Test } from './entities/test.entity.js';
 import { CreateTestInput } from './dto/create-test.input.js';
 import { UpdateTestInput } from './dto/update-test.input.js';
 
+@Public()
 @Resolver(() => Test)
 export class TestResolver {
   constructor(private readonly testService: TestService) {}
